@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+
+    <audio id="player" controls loop >
+        <source src="bugreport.mp3" />
+    </audio>
+
+    <script>
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function set_text(txt) {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: txt,
+                    artist: txt,
+                    album: txt,
+                    artwork: [
+                        { src: 'roger.png', sizes: '96x96', type: 'image/png' },
+                    ]
+                });
+            }
+        }
+
+        async function fuzz(wordlist) {
+            wl = await(wordlist)
+            while (true) {
+                for (const w of wl) {
+                    set_text(w);
+                    await sleep(10);
+                }
+            }
+        }
+
+        async function make_wordlist() {
+            // Plaintext wordlist, one entry per line
+            tlist = await (await fetch("wordlist.txt")).text();
+            tlist = tlist.split(/\r?\n/);
+
+            // Evil wordlist, one b64-encoded word per line
+            blist = await (await fetch("wordlist.b64.txt")).text();
+            blist = blist.split(/\r?\n/);
+            blist = blist.map(atob);
+
+
+            var wordlist = tlist.concat(blist);
+            return wordlist;
+        }
+
+        if ('mediaSession' in navigator) {
+            //navigator.mediaSession.setActionHandler('play', function () { /* */ });
+            //navigator.mediaSession.setActionHandler('pause', function () { /* Code excerpted. */ });
+        }
+
+        var player = document.getElementById("player");
+        player.volume = 0.001; 
+        player.play();
+
+        
+        var wordlist = make_wordlist();
+        setTimeout(fuzz.bind(null, wordlist), 0);
+
+
+    </script>
+</body>
+</html>

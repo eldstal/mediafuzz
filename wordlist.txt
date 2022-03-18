@@ -1,0 +1,10 @@
+<h1>DOM INJECT</h1>
+<script>alert("XSS")</script>
+%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s
+{7+1}
+"..os.execute('ls')
+";--
+"${env}"
+$$
+$_
+$()
