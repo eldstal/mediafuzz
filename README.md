@@ -1,5 +1,5 @@
 # Web MediaSession metadata fuzzer
-Useful to throw spam at a AVRCP bluetooth device.
+Useful to throw spam at an AVRCP bluetooth device.
 
 ## Why
 Serve it somewhere. Load up `index.html` on your phone. Connect your phone to a bluetooth stereo. Watch the crazy song titles flash on by. Break some stuff.
