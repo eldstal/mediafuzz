@@ -1,20 +1,57 @@
 <!DOCTYPE html>
 <html>
+<head>
+
+  <style>
+
+    input { 
+      width: 50%;
+      max-width: 800px;
+      margin: 1px;
+    }
+
+    button {
+      margin: 1px;
+      width: 160px;
+    }
+
+    div#current_text {
+      height: 4em;
+      width: 100%;
+      overflow: hidden;
+    }
+  </style>
+</head>
 
 <body>
-
-
     <audio id="player" controls loop >
         <source src="bugreport.mp3" />
     </audio>
+    <br />
+
 
     <script>
+
+        RUNNING = false;
+        DELAY = 10;
+
+        function btn_stop() {
+          RUNNING = false;
+        }
+
+        function play_gently() {
+          var player = document.getElementById("player");
+          player.volume = 0.001; 
+          player.play();
+        }
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
         function set_text(txt) {
+            document.getElementById("current_text").innerText = txt;
+
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: txt,
@@ -25,47 +62,88 @@
                     ]
                 });
             }
+
+
         }
 
         async function fuzz(wordlist) {
             wl = await(wordlist)
-            while (true) {
+            RUNNING = true;
+            while (RUNNING) {
                 for (const w of wl) {
                     set_text(w);
-                    await sleep(10);
+                    await sleep(DELAY);
                 }
             }
         }
 
-        async function make_wordlist() {
-            // Plaintext wordlist, one entry per line
-            tlist = await (await fetch("wordlist.txt")).text();
-            tlist = tlist.split(/\r?\n/);
+        async function parse_wordlist(url, is_base64) {
 
-            // Evil wordlist, one b64-encoded word per line
-            blist = await (await fetch("wordlist.b64.txt")).text();
+            blist = await (await fetch(url)).text();
             blist = blist.split(/\r?\n/);
-            blist = blist.map(atob);
 
+            if (is_base64) {
+              blist = blist.map(atob);
+            }
 
-            var wordlist = tlist.concat(blist);
-            return wordlist;
+            return blist;
         }
 
-        if ('mediaSession' in navigator) {
-            //navigator.mediaSession.setActionHandler('play', function () { /* */ });
-            //navigator.mediaSession.setActionHandler('pause', function () { /* Code excerpted. */ });
+        function btn_wordlist() {
+
+          play_gently();
+
+          var url = document.getElementById("listurl").value;
+
+          var wordlist = parse_wordlist(url, false);
+
+          setTimeout(fuzz.bind(null, wordlist), 0);
+
         }
 
-        var player = document.getElementById("player");
-        player.volume = 0.001; 
-        player.play();
+        function btn_b64list() {
 
-        
-        var wordlist = make_wordlist();
-        setTimeout(fuzz.bind(null, wordlist), 0);
+          play_gently();
+
+          var url = document.getElementById("b64url").value;
+
+          var wordlist = parse_wordlist(url, true);
+
+          setTimeout(fuzz.bind(null, wordlist), 0);
+
+        }
+
+        function btn_single() {
+
+          play_gently();
+
+          var text = document.getElementById("single_text").value;
+
+          set_text(text);
+
+        }
 
 
     </script>
+
+    <div id="current_text">
+
+    </div>
+
+    <button onclick="btn_stop()">Stop it!</button>
+    <br />
+
+    <button onclick="btn_wordlist()">Run Wordlist</button>
+    <input id="listurl" value="wordlist.txt" />
+    <br />
+
+    <button onclick="btn_b64list()">Run B64 Wordlist</button>
+    <input id="b64url" value="wordlist.b64.txt" />
+    <br />
+
+    <button onclick="btn_single()">Set text</button>
+    <input id="single_text" value="{{7*4}}%s%s%s%s<script>alert(1)</script>" />
+    <br />
+
 </body>
 </html>
